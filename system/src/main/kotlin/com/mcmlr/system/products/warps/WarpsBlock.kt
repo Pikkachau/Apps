@@ -131,7 +131,7 @@ class WarpsViewController(private val player: Player, origin: Origin, private va
                 }
 
                 var homeView: ButtonView? = null
-                warps.forEach { home ->
+                warps.forEach { home ->dle/wrapper
                     val modifier = if (homeView == null) {
                         Modifier()
                             .size(WRAP_CONTENT, WRAP_CONTENT)
@@ -285,7 +285,7 @@ class WarpsInteractor(
                     warp.pitch
                 )
 
-                warpsRepository.teleport(player, location)
+                warpsRepository.teleport(player, warp.name)
                 parent.cancel()
             }
         }
