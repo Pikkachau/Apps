@@ -31,7 +31,7 @@ dependencies {
     //Dagger
     implementation("com.google.dagger:dagger:2.56.2")
     ksp("com.google.dagger:dagger-compiler:2.56.2")
-    compileOnly("com.github.Artillex-Studios:AxPlayerWarps:1.11.2")
+    compileOnly(files("libs/AxPlayerWarps-1.11.2.jar"))
     testImplementation(kotlin("test"))
 }
 
