@@ -11,6 +11,7 @@ repositories {
 
     maven("https://repo.extendedclip.com/releases/")
     maven("https://jitpack.io")
+    maven("https://repo.artillex-studios.com/releases") // <--- Add this
 }
 
 dependencies {
@@ -30,7 +31,7 @@ dependencies {
     //Dagger
     implementation("com.google.dagger:dagger:2.56.2")
     ksp("com.google.dagger:dagger-compiler:2.56.2")
-
+    compileOnly("com.artillexstudios:AxPlayerWarps:1.11.2") // <--- Add this
     testImplementation(kotlin("test"))
 }
 
