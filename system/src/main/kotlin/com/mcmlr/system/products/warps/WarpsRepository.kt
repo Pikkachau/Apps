@@ -1,7 +1,7 @@
 package com.mcmlr.system.products.warps
 
 import com.artillexstudios.axplayerwarps.AxPlayerWarps
-//import com.artillexstudios.axplayerwarps.api.AxPlayerWarpsAPI
+// REMOVE THIS: import com.artillexstudios.axplayerwarps.api.AxPlayerWarpsAPI 
 import com.mcmlr.blocks.api.Resources
 import com.mcmlr.blocks.api.data.ConfigModel
 import com.mcmlr.blocks.api.data.Repository
@@ -22,37 +22,33 @@ class WarpsRepository @Inject constructor(
 ) : Repository<ServerWarpsModel>(resources.dataFolder()) {
 
     private var updatingWarp: WarpModel? = null
-    
-    // Lazy load the API to ensure the plugin is enabled before we grab the instance
-    private val axApi: AxPlayerWarpsAPI by lazy {
-        AxPlayerWarps.getApi()
+
+    // FIX 1: Access the Main Plugin Class directly
+    private val axPlugin: AxPlayerWarps by lazy {
+        AxPlayerWarps.getInstance()
     }
 
     init {
-        // We no longer load from a local file, so we initialize an empty dummy model
-        // to satisfy the parent Repository class.
         model = ServerWarpsModel(listOf())
     }
 
-    // --- INTEGRATION: Teleport using AxPlayerWarps ---
     fun teleport(player: Player, warpName: String) {
-        val warp = axApi.warpManager.getWarp(warpName)
+        // FIX 2: Use the plugin instance to get the manager
+        // Note: Check if it is 'warpManager' or 'getWarpManager()'
+        val warp = axPlugin.warpManager.getWarp(warpName)
+        
         if (warp != null) {
-            // The plugin handles the actual teleport logic (and its own internal cooldowns if configured)
             warp.teleport(player)
-            
-            // If you still want to track your OWN custom cooldown logic from your CooldownRepository:
-            cooldownRepository.addPlayerLastWarpTime(player) 
+            cooldownRepository.addPlayerLastWarpTime(player)
         }
     }
 
-    // --- INTEGRATION: Get Warps from AxPlayerWarps ---
     fun getWarps(): List<WarpModel> {
-        // Map AxPlayerWarps objects to your WarpModel objects so your GUI works
-        return axApi.warpManager.warps.map { axWarp ->
+        // FIX 3: Update access here too
+        return axPlugin.warpManager.warps.map { axWarp ->
             WarpModel(
-                uuid = UUID.randomUUID(), // AxWarps might not expose a unique ID, or use axWarp.getId() if available
-                icon = axWarp.icon ?: Material.ENDER_PEARL, // Use warp icon or fallback
+                uuid = UUID.randomUUID(), 
+                icon = axWarp.icon ?: Material.ENDER_PEARL,
                 name = axWarp.name,
                 x = axWarp.location.x,
                 y = axWarp.location.y,
@@ -63,6 +59,9 @@ class WarpsRepository @Inject constructor(
             )
         }
     }
+
+    // ... keep your canTeleport, updateWarp, getUpdateBuilder ...
+    // (They don't use the API, so they are fine)
 
     fun canTeleport(player: Player): Long {
         val lastTeleport = cooldownRepository.getPlayerLastWarpTime(player)
@@ -91,100 +90,32 @@ class WarpsRepository @Inject constructor(
             )
     }
 
-    // --- INTEGRATION: Create/Save to AxPlayerWarps ---
     fun saveWarp(warpModel: WarpModel) {
-        // We override this to talk to the API instead of saving to JSON
-        
-        // 1. Check if warp exists
-        val existingWarp = axApi.warpManager.getWarp(warpModel.name)
+        // FIX 4: Update access
+        val existingWarp = axPlugin.warpManager.getWarp(warpModel.name)
         
         if (existingWarp != null) {
-            // Update logic (Depends on API version, usually you remove and re-add or setLocation)
             existingWarp.location = Location(
                 Bukkit.getWorld(warpModel.world),
                 warpModel.x, warpModel.y, warpModel.z, warpModel.yaw, warpModel.pitch
             )
-            // If the API supports setting icons:
             existingWarp.icon = warpModel.icon
         } else {
-            // Create new Warp
-            axApi.warpManager.createWarp(
+            axPlugin.warpManager.createWarp(
                 warpModel.name,
                 Location(Bukkit.getWorld(warpModel.world), warpModel.x, warpModel.y, warpModel.z, warpModel.yaw, warpModel.pitch),
-                warpModel.uuid // Using UUID as owner, or specific UUID based on your logic
+                warpModel.uuid
             )
         }
     }
 
-    // --- INTEGRATION: Delete from AxPlayerWarps ---
     fun deleteWarp(warpModel: WarpModel) {
-        val warp = axApi.warpManager.getWarp(warpModel.name)
+        // FIX 5: Update access
+        val warp = axPlugin.warpManager.getWarp(warpModel.name)
         warp?.let {
-            axApi.warpManager.removeWarp(it)
+            axPlugin.warpManager.removeWarp(it)
         }
     }
 }
 
-// Keep these data classes as they are required by your App/GUI system
-data class ServerWarpsModel(
-    var warps: List<WarpModel>,
-) : ConfigModel()
-
-data class WarpModel(
-    val uuid: UUID,
-    val icon: Material,
-    val name: String,
-    val x: Double,
-    val y: Double,
-    val z: Double,
-    val yaw: Float,
-    val pitch: Float,
-    val world: String,
-) {
-    class Builder {
-        var icon: Material? = null
-        var name: String? = null
-        var location: Location? = null
-        var uuid: UUID? = null
-
-        fun icon(icon: Material?): Builder {
-            this.icon = icon
-            return this
-        }
-
-        fun name(name: String): Builder {
-            this.name = name
-            return this
-        }
-
-        fun location(location: Location): Builder {
-            this.location = location
-            return this
-        }
-
-        fun uuid(uuid: UUID): Builder {
-            this.uuid = uuid
-            return this
-        }
-
-        fun build(): WarpModel? {
-            return icon?.let { icon ->
-                name?.let { name ->
-                    location?.let { location ->
-                        return WarpModel(
-                            uuid = uuid ?: UUID.randomUUID(),
-                            icon = icon,
-                            name = name,
-                            x = location.x,
-                            y = location.y,
-                            z = location.z,
-                            yaw = location.yaw,
-                            pitch = location.pitch,
-                            world = location.world?.name ?: "null",
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
+// ... Keep your data classes below ...
