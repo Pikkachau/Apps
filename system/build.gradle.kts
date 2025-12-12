@@ -32,7 +32,24 @@ dependencies {
     implementation("com.google.dagger:dagger:2.56.2")
     ksp("com.google.dagger:dagger-compiler:2.56.2")
     testImplementation(kotlin("test"))
-    compileOnly(files("libs/AxPlayerWarps-1.11.2.jar"))
+    // Define the path relative to the PROJECT directory (system/)
+    val jarFile = layout.projectDirectory.file("libs/AxPlayerWarps-1.11.2.jar").asFile
+
+    if (jarFile.exists()) {
+        println("SUCCESS: Found AxPlayerWarps jar at: ${jarFile.absolutePath}")
+        compileOnly(files(jarFile))
+    } else {
+        // This will show up in your GitHub Actions logs in RED
+        println("ERROR: Jar file NOT found at: ${jarFile.absolutePath}")
+        println("       Please check that the file is in 'system/libs/' and the name matches exactly.")
+        
+        // Fallback: Check if it's in the root libs folder just in case
+        val rootJar = rootProject.layout.projectDirectory.file("libs/AxPlayerWarps-1.11.2.jar").asFile
+        if (rootJar.exists()) {
+             println("SUCCESS: Found AxPlayerWarps jar in ROOT libs.")
+             compileOnly(files(rootJar))
+        }
+    }
 }
 
 tasks.test {
