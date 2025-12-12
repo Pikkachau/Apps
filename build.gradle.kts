@@ -35,9 +35,10 @@ repositories {
 
 dependencies {
     implementation(platform("com.squareup.okhttp3:okhttp-bom:5.3.0"))
-    compileOnly("com.artillexstudios:AxPlayerWarps:1.11.2")
     implementation("com.squareup.okhttp3:okhttp")
     implementation("com.squareup.okhttp3:logging-interceptor")
+    compileOnly("net.dmulloy2:ProtocolLib:5.3.0")
+    compileOnly("com.artillexstudios:AxPlayerWarps:1.11.2")
 }
 
 val targetJavaVersion = 21
